@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define N 127
+
+#define M 127
 
 typedef struct no
 {
@@ -9,7 +10,7 @@ typedef struct no
     struct no *prox;
 } No;
 
-typedef No* Hash[N];
+typedef No* Hash[M];
 
 int hash(int chave, int tam);
 void insere(Hash tabela, int chave, int info);
@@ -25,7 +26,7 @@ int main()
     Hash tabela;
     No *aux = NULL;
 
-    for (int i = 0; i < N; i++) //Inicializando meu vetor de ponteiros para No com endereços vazios.
+    for (int i = 0; i < M; i++) //Inicializando meu vetor de ponteiros para No com endereços vazios.
         tabela[i] = NULL;
 
     while (escolha_menu != -1)
@@ -120,7 +121,7 @@ int hash(int chave, int tam)//Método da divisão.
 void insere(Hash tabela, int chave, int info)
 {
     No *aux = busca(tabela, chave);
-    int h = hash(chave, N);
+    int h = hash(chave, M);
 
     if (aux == NULL) // não encontrou o elemento.
     {
@@ -134,7 +135,7 @@ void insere(Hash tabela, int chave, int info)
 
 No *busca(Hash tabela, int chave)
 {
-    int h = hash(chave, N);
+    int h = hash(chave, M);
     No *aux = tabela[h];
 
     while (aux != NULL)

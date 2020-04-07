@@ -2,48 +2,52 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define N 100        //Tamanho da tabela.
-#define QTD_CHAVE 20 //Quantidade de chaves - (CASO ALTERADO, ATUALIZAR VETOR DE CHAVES).
-#define TAM_CHAVE 5  //Quantidade de digitos da chave - (CASO ALTERADO, ATUALIZAR VETOR DE CHAVES).
-#define TAM_POS 2    //Quantidade de digitos da posição gerada - (CASO ALTERADO, ATUALIZAR TAMANHO DA TABELA).
+#define P 100     //Endereços base.
+#define S 50      //Zona de colisão.
+#define M (P + S) //Tamanho da tabela.
+#define N 20      //Quantidade de chaves - (CASO ALTERADO, ATUALIZAR VETOR DE CHAVES).
+
+#define TAM_CHAVE 5 //Quantidade de digitos da chave - (CASO ALTERADO, ATUALIZAR VETOR DE CHAVES).
+#define TAM_POS 2   //Quantidade de digitos da posição gerada - (CASO ALTERADO, ATUALIZAR TAMANHO DA TABELA).
 
 typedef struct no
 {
     int chave;
     int info;
-    struct no *prox;
+    int prox;
 } No;
 
-typedef No *Hash[N];
-
+typedef No *Hash[M];
 /*======================================== Escopo Funções ========================================*/
-int hash(int chave, int tam_chave, int tam_pos);
-int insere(Hash tabela, int chave, int tam_chave, int info, int tam_pos);
-No *busca(Hash tabela, int chave, int tam_chave, int tam_pos);
-int remover(Hash tabela, int chave, int tam_chave, int tam_pos);
+
+int hash(int chave);
+int insere(Hash tabela, int chave, int info);
+No *busca(Hash tabela, int chave);
+int remover(Hash tabela, int chave);
+int colisao(Hash tabela);
 void dec_to_vetor(int decimal, int *vetor, int tam);
-int formar_posicao(int *chave, int tam_chave, int tam_pos);
-void contar_digitos(int tam_chave, int qtd_chave);
-void calcular_dist(int tam_chave, int qtd_chave);
-void analisar_dist(int tam_chave, int tam_pos);
-void analisar_digitos(int *chaves, int tam_chave, int qtd_chave, int tam_pos);
-void exibir_analise(int tam_chave, int qtd_chave);
-void limpar_analise(int tam_chave, int qtd_chave);
+int formar_posicao(int *chave);
+void contar_digitos();
+void calcular_dist();
+void analisar_dist();
+void analisar_digitos(int *chaves);
+void exibir_analise();
+void limpar_analise();
 void insertion_sort(float *vetor, int tam);
 void copia_vetor(float *vetor_origem, float *vetor_destino, int tam);
-
 /*======================================== Variáveis Globais ======================================*/
-int vetor_chaves[QTD_CHAVE] = {87437, 15568, 78694, 41491, 50159,
-                               69749, 71395, 84251, 97075, 49598,
-                               47987, 18470, 10033, 71079, 98093,
-                               79545, 20370, 31497, 40554, 79228};
 
-int matriz_chaves[QTD_CHAVE][TAM_CHAVE]; //cada chave em formato de vetor.
-int quantidade_digitos[TAM_CHAVE][10];   //contagem de dígitos das chaves.
-float distribuicao_digitos[TAM_CHAVE];   //distribuicao de cada digito.
-int posicao_digitos[TAM_POS];            //posição dos dígitos de menor distribuição.
+int vetor_chaves[N] = {87437, 15568, 78694, 41491, 50159,
+                       69749, 71395, 84251, 97075, 49598,
+                       47987, 18470, 10033, 71079, 98093,
+                       79545, 20370, 31497, 40554, 79228};
 
+int matriz_chaves[N][TAM_CHAVE];       //cada chave em formato de vetor.
+int quantidade_digitos[TAM_CHAVE][10]; //contagem de dígitos das chaves.
+float distribuicao_digitos[TAM_CHAVE]; //distribuicao de cada digito.
+int posicao_digitos[TAM_POS];          //posição dos dígitos de menor distribuição.
 /*======================================== Função Main ============================================*/
+
 int main()
 {
     int info = 0;
@@ -54,7 +58,7 @@ int main()
     Hash tabela;
     No *aux = NULL;
 
-    for (int i = 0; i < N; i++) //Inicializando meu vetor de ponteiros para No com endereços vazios.
+    for (int i = 0; i < M; i++) //Inicializando meu vetor de ponteiros para No com endereços vazios.
         tabela[i] = NULL;
 
     while (escolha_menu != -1)
@@ -62,7 +66,7 @@ int main()
         system("clear");
 
         printf(" ________________________________________ \n");
-        printf("|############## HASH-EXTERNA ############|\n");
+        printf("|############## HASH-INTERNA ############|\n");
         printf("|                                        |\n");
         printf("|          [1] ANALISAR DIGITOS          |\n");
         printf("|          [2] EXIBIR ANALISE            |\n");
@@ -79,8 +83,8 @@ int main()
         switch (escolha_menu)
         {
         case 1:
-            limpar_analise(TAM_CHAVE, QTD_CHAVE);
-            analisar_digitos(vetor_chaves, TAM_CHAVE, QTD_CHAVE, TAM_POS);
+            limpar_analise();
+            analisar_digitos(vetor_chaves);
             analisado = 1;
             printf("\nDigitos Analisados");
             printf("\nPressione [ENTER] para retornar ao menu.");
@@ -90,7 +94,7 @@ int main()
 
         case 2:
             if (analisado)
-                exibir_analise(TAM_CHAVE, QTD_CHAVE);
+                exibir_analise(TAM_CHAVE, N);
             else
             {
                 printf("\nAnalisar digitos primeiro!");
@@ -103,15 +107,15 @@ int main()
         case 3:
             if (analisado)
             {
-                int aux;
+                int pos;
                 printf("\nDigite o numero deseja guardar: ");
                 scanf("%d", &info);
                 setbuf(stdin, NULL);
                 printf("\nDigite o numero da chave de acesso: ");
                 scanf("%d", &chave);
                 setbuf(stdin, NULL);
-                aux = insere(tabela, chave, TAM_CHAVE, info, TAM_POS);
-                printf("\nInserido na posicao %d!", aux);
+                pos = insere(tabela, chave, info);
+                printf("\nInserido na posicao %d!", pos);
                 printf("\nPressione [ENTER] para retornar ao menu.");
                 setbuf(stdin, NULL);
                 getchar();
@@ -130,7 +134,7 @@ int main()
             {
                 printf("\nDigite o numero da chave de acesso: ");
                 scanf("%d", &chave);
-                aux = busca(tabela, chave, TAM_CHAVE, TAM_POS);
+                aux = busca(tabela, chave);
                 if (aux != NULL)
                 {
                     printf("\nNumero guardado: %d", aux->info);
@@ -160,7 +164,7 @@ int main()
             {
                 printf("\nDigite o numero da chave de acesso: ");
                 scanf("%d", &chave);
-                if (remover(tabela, chave, TAM_CHAVE, TAM_POS))
+                if (remover(tabela, chave))
                 {
                     printf("\nRemovido com sucesso!");
                     printf("\nPressione [ENTER] para retornar ao menu.");
@@ -199,41 +203,86 @@ int main()
     }
     return 0;
 }
-
 /*================================= Funções para tratamento de colisão ================================*/
-int insere(Hash tabela, int chave, int tam_chave, int info, int tam_pos)
-{
-    No *aux = busca(tabela, chave, tam_chave, tam_pos);
-    int h = hash(chave, tam_chave, tam_pos);
 
-    if (aux == NULL) //Verifica chave repetida.
+int insere(Hash tabela, int chave, int info)
+{
+    No *aux = busca(tabela, chave);
+    int h = hash(chave);
+
+    //Verifica chave repetida.
+    if (aux == NULL)
     {
-        aux = (No *)malloc(sizeof(No));
-        aux->chave = chave;
-        aux->info = info;
-        aux->prox = tabela[h];
-        tabela[h] = aux;
+        aux = tabela[h];
+        //Verifica colisão.
+        if (aux == NULL)
+        {
+            //Insere elemento.
+            aux = (No *)malloc(sizeof(No));
+            aux->chave = chave;
+            aux->info = info;
+            aux->prox = -1;
+            tabela[h] = aux;
+            return h;
+        }
+        else
+        {
+            h = colisao(tabela);
+            if (h == -1)
+            {
+                printf("\nOVERFLOW\n");
+                return h;
+            }
+            else
+            {
+                //Percorre a lista de colisão interna até o último elemento.
+                while (aux->prox != -1)
+                    aux = tabela[aux->prox];
+                aux->prox = h;
+                //Insere elemento.
+                aux = (No *)malloc(sizeof(No));
+                aux->chave = chave;
+                aux->info = info;
+                aux->prox = -1;
+                tabela[h] = aux;
+                return h;
+            }
+        }
     }
-    return h;
+    return -2;
 }
 
-No *busca(Hash tabela, int chave, int tam_chave, int tam_pos)
+No *busca(Hash tabela, int chave)
 {
-    int h = hash(chave, tam_chave, tam_pos);
+    int h = hash(chave);
     No *aux = tabela[h];
 
-    while (aux != NULL)
+    if (aux != NULL)
     {
-        if (aux->chave == chave)
-            return aux;
-        aux = aux->prox;
+        if (aux->prox == -1)
+        {
+            if (aux->chave == chave)
+                return aux;
+        }
+        else
+        {
+            while (aux->prox != -1)
+            {
+                if (aux->chave == chave)
+                    return aux;
+                aux = tabela[aux->prox];
+                if (aux->prox == -1)
+                    if (aux->chave == chave)
+                        return aux;
+            }
+        }
     }
     return NULL;
 }
 
-int remover(Hash tabela, int chave, int tam_chave, int tam_pos)
+int remover(Hash tabela, int chave)
 {
-    No *aux = busca(tabela, chave, tam_chave, tam_pos);
+    No *aux = busca(tabela, chave);
     if (aux != NULL)
     {
         free(aux);
@@ -243,14 +292,22 @@ int remover(Hash tabela, int chave, int tam_chave, int tam_pos)
     return 0;
 }
 
+int colisao(Hash tabela) //Verifica posicao disponível na zona de colisão.
+{
+    for (int i = P; i < M; i++)
+        if (tabela[i] == NULL)
+            return i;
+    return -1;
+}
 /*================================ Funções para análise dos dígitos ==================================*/
-int hash(int chave, int tam_chave, int tam_pos)
+
+int hash(int chave)
 {
     int posicao = 0;
-    int aux[tam_chave];
-    int mult = pow(10, (tam_pos - 1));
-    dec_to_vetor(chave, aux, tam_chave);
-    for (int i = 0; i < tam_pos; i++)
+    int aux[TAM_CHAVE];
+    int mult = pow(10, (TAM_POS - 1));
+    dec_to_vetor(chave, aux, TAM_CHAVE);
+    for (int i = 0; i < TAM_POS; i++)
     {
         posicao = posicao + aux[posicao_digitos[i]] * mult;
         mult = mult / 10;
@@ -267,64 +324,64 @@ void dec_to_vetor(int decimal, int *vetor, int tam)
     }
 }
 
-void contar_digitos(int tam_chave, int qtd_chave)
+void contar_digitos()
 {
-    for (int i = 0; i < tam_chave; i++)
-        for (int j = 0; j < qtd_chave; j++)
+    for (int i = 0; i < TAM_CHAVE; i++)
+        for (int j = 0; j < N; j++)
             for (int k = 0; k < 10; k++)
                 if (matriz_chaves[j][i] == k)
                     quantidade_digitos[i][k]++;
 }
 
-void calcular_dist(int tam_chave, int qtd_chave)
+void calcular_dist()
 {
-    for (int i = 0; i < tam_chave; i++)
+    for (int i = 0; i < TAM_CHAVE; i++)
         for (int j = 0; j < 10; j++)
             distribuicao_digitos[i] =
                 distribuicao_digitos[i] +
                 (quantidade_digitos[i][j] *
-                 pow((j - (qtd_chave / 10)), 2));
+                 pow((j - (N / 10)), 2));
 }
 
-void analisar_dist(int tam_chave, int tam_pos)
+void analisar_dist()
 {
-    float aux[tam_chave];
-    copia_vetor(distribuicao_digitos, aux, tam_chave);
-    insertion_sort(aux, tam_chave);
-    for (int i = 0; i < tam_pos; i++)
-        for (int j = 0; j < tam_chave; j++)
+    float aux[TAM_CHAVE];
+    copia_vetor(distribuicao_digitos, aux, TAM_CHAVE);
+    insertion_sort(aux, TAM_CHAVE);
+    for (int i = 0; i < TAM_POS; i++)
+        for (int j = 0; j < TAM_CHAVE; j++)
             if (aux[i] == distribuicao_digitos[j])
                 posicao_digitos[i] = j;
 }
 
-void analisar_digitos(int *chaves, int tam_chave, int qtd_chave, int tam_pos)
+void analisar_digitos(int *chaves)
 {
-    for (int i = 0; i < qtd_chave; i++)
-        dec_to_vetor(chaves[i], matriz_chaves[i], tam_chave);
+    for (int i = 0; i < N; i++)
+        dec_to_vetor(chaves[i], matriz_chaves[i], TAM_CHAVE);
 
-    contar_digitos(tam_chave, qtd_chave);
-    calcular_dist(tam_chave, qtd_chave);
-    analisar_dist(tam_chave, tam_pos);
+    contar_digitos();
+    calcular_dist();
+    analisar_dist();
 }
 
-void exibir_analise(int tam_chave, int qtd_chave)
+void exibir_analise()
 {
     printf("\n== INFORMACOES SOBRE A ANALISE ==\n\n");
-    for (int i = 0; i < qtd_chave; i++)
+    for (int i = 0; i < N; i++)
     {
         printf("Chave %2.d -> %d", i + 1, matriz_chaves[i][0]);
-        for (int j = 1; j < tam_chave; j++)
+        for (int j = 1; j < TAM_CHAVE; j++)
             printf("%d", matriz_chaves[i][j]);
         printf("\n");
     }
     printf("=================================\n");
-    for (int i = 0; i < tam_chave; ++i)
+    for (int i = 0; i < TAM_CHAVE; ++i)
     {
         for (int j = 0; j < 10; j++)
             printf("Digito %d -> numero: %d -> qtd. = %d\n", i + 1, j, quantidade_digitos[i][j]);
         printf("=================================\n");
     }
-    for (int i = 0; i < tam_chave; i++)
+    for (int i = 0; i < TAM_CHAVE; i++)
         printf("Distribuicao digito %d -> %.2f\n", i + 1, distribuicao_digitos[i]);
     printf("=================================\n");
     printf("Hash -> ");
@@ -336,9 +393,9 @@ void exibir_analise(int tam_chave, int qtd_chave)
     getchar();
 }
 
-void limpar_analise(int tam_chave, int qtd_chave)
+void limpar_analise()
 {
-    for (int i = 0; i < tam_chave; i++)
+    for (int i = 0; i < TAM_CHAVE; i++)
     {
         for (int j = 0; j < 10; j++)
             quantidade_digitos[i][j] = 0;

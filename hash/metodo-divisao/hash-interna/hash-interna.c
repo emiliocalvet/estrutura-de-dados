@@ -1,19 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define N 127
+
+#define P 100     //Endereços base.
+#define S 37      //Zona de colisão.
+#define M (P + S) //Tamanho da tabela (n° primo).
 
 typedef struct no
 {
     int chave;
     int info;
+    int prox;
 } No;
 
-typedef No *Hash[N];
+typedef No *Hash[M];
 
-int hash(int chave, int tam);
-void insere(Hash tabela, int chave, int info);
+int hash(int chave);
+int insere(Hash tabela, int chave, int info);
 No *busca(Hash tabela, int chave);
 int remover(Hash tabela, int chave);
+int colisao(Hash tabela);
 
 int main()
 {
@@ -24,7 +29,7 @@ int main()
     Hash tabela;
     No *aux = NULL;
 
-    for (int i = 0; i < N; i++) //Inicializando meu vetor de ponteiros para No com endereços vazios.
+    for (int i = 0; i < M; i++) //Inicializando meu vetor de ponteiros para No com endereços vazios.
         tabela[i] = NULL;
 
     while (escolha_menu != -1)
@@ -47,14 +52,19 @@ int main()
 
         switch (escolha_menu)
         {
-        case 1:
+        case 1:;
+            int pos;
             printf("\nDigite o numero deseja guardar: ");
             scanf("%d", &info);
             setbuf(stdin, NULL);
             printf("\nDigite o numero da chave de acesso: ");
             scanf("%d", &chave);
             setbuf(stdin, NULL);
-            insere(tabela, chave, info);
+            pos = insere(tabela, chave, info);
+            printf("\nInserido na posicao %d!", pos);
+            printf("\nPressione [ENTER] para retornar ao menu.");
+            setbuf(stdin, NULL);
+            getchar();
             break;
 
         case 2:
@@ -112,39 +122,82 @@ int main()
     return 0;
 }
 
-int hash(int chave, int tam)//Método da divisão.
+int hash(int chave) //Método da divisão.
 {
-    return (chave % tam);
+    return (chave % M);
 }
 
-void insere(Hash tabela, int chave, int info)
+int insere(Hash tabela, int chave, int info)
 {
-    int h = hash(chave, N);
+    No *aux = busca(tabela, chave);
+    int h = hash(chave);
 
-    while (tabela[h] != NULL) // encontrou o elemento.
+    //Verifica chave repetida.
+    if (aux == NULL)
     {
-        if (tabela[h]->chave == chave)
-            break;
-        h = (h + 1) % N;
+        aux = tabela[h];
+        //Verifica colisão.
+        if (aux == NULL)
+        {
+            //Insere elemento.
+            aux = (No *)malloc(sizeof(No));
+            aux->chave = chave;
+            aux->info = info;
+            aux->prox = -1;
+            tabela[h] = aux;
+            return h;
+        }
+        else
+        {
+            h = colisao(tabela);
+            if (h == -1)
+            {
+                printf("\nOVERFLOW\n");
+                return h;
+            }
+            else
+            {
+                //Percorre a lista de colisão interna até o último elemento.
+                while (aux->prox != -1)
+                    aux = tabela[aux->prox];
+                aux->prox = h;
+                //Insere elemento.
+                aux = (No *)malloc(sizeof(No));
+                aux->chave = chave;
+                aux->info = info;
+                aux->prox = -1;
+                tabela[h] = aux;
+                return h;
+            }
+        }
     }
-
-    if (tabela[h] == NULL) // não encontrou o elemento.
-    {
-        tabela[h] = (No *)malloc(sizeof(No));
-        tabela[h]->chave = chave;
-        tabela[h]->info = info;
-    }
+    return -2;
 }
 
 No *busca(Hash tabela, int chave)
 {
-    int h = hash(chave, N);
+    int h = hash(chave);
+    No *aux = tabela[h];
 
-    while (tabela[h] != NULL)
+    if (aux != NULL)
     {
-        if (tabela[h]->chave == chave)
-            return tabela[h];
-        h = (h + 1) % N;
+        if (aux->prox == -1)
+        {
+            if (aux->chave == chave)
+                return aux;
+        }
+        else
+        {
+            while (aux->prox != -1)
+            {
+                if (aux->chave == chave)
+                    return aux;
+                aux = tabela[aux->prox];
+                if (aux->prox == -1)
+                    if (aux->chave == chave)
+                        return aux;
+            }
+        }
     }
     return NULL;
 }
@@ -159,4 +212,12 @@ int remover(Hash tabela, int chave)
         return 1;
     }
     return 0;
+}
+
+int colisao(Hash tabela) //Verifica posicao disponível na zona de colisão.
+{
+    for (int i = P; i < M; i++)
+        if (tabela[i] == NULL)
+            return i;
+    return -1;
 }
