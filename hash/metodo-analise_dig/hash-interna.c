@@ -14,7 +14,7 @@ typedef struct no
 {
     int chave;
     int info;
-    int pos; //Guarda a osição da tabela que faz referencia ao nó. 
+    int pos; //Guarda a osição da tabela que faz referencia ao nó.
     struct no *prox;
 } No;
 
@@ -117,7 +117,10 @@ int main()
                 scanf("%d", &chave);
                 setbuf(stdin, NULL);
                 pos = inserir(tabela, chave, info);
-                printf("\nInserido na posicao %d!", pos);
+                if (pos != -1)
+                    printf("\nInserido na posicao %d!", pos);
+                else
+                    printf("\nErro. Tente uma chave diferente!");
                 printf("\nPressione [ENTER] para retornar ao menu.");
                 setbuf(stdin, NULL);
                 getchar();
@@ -212,7 +215,8 @@ int inserir(Hash tabela, int chave, int info)
     No *aux = buscar(tabela, chave);
     int h = hash(chave);
 
-    if (aux == NULL)//Verifica chave repetida.
+    //Verifica chave repetida.
+    if (aux == NULL)
     {
         aux = tabela[h];
         //Verifica colisão.
@@ -274,12 +278,12 @@ int remover(Hash tabela, int chave)
 {
     No *aux = buscar(tabela, chave);
 
-    if (aux != NULL)//Verifica se a chave está cadastrada.
+    if (aux != NULL) //Verifica se a chave está cadastrada.
     {
         int h = hash(chave);
         aux = tabela[h];
 
-        if (aux != NULL)//Sem utilidade, REMOVER IF INUTIL.
+        if (aux != NULL) //Sem utilidade, REMOVER IF INUTIL.
         {
             No *ant;
 
@@ -326,7 +330,7 @@ int colisao(Hash tabela) //Verifica posicao disponível na zona de colisão e re
     for (int i = P; i < M; i++)
         if (tabela[i] == NULL)
             return i;
-    return -1;//Caso não tenha mais espaço disponível.
+    return -1; //Caso não tenha mais espaço disponível.
 }
 /*================================ Funções para análise dos dígitos ==================================*/
 
@@ -392,7 +396,7 @@ void analisar_dist()
                 posicao_digitos[i] = j;
 }
 
-//Faz análise das chaves para descobrir os digitos que formam a posicao da tabela. 
+//Faz análise das chaves para descobrir os digitos que formam a posicao da tabela.
 void analisar_digitos(int *chaves)
 {
     for (int i = 0; i < N; i++)

@@ -16,8 +16,8 @@ typedef struct no
 typedef No *Hash[M];
 
 int hash(int chave);
-int insere(Hash tabela, int chave, int info);
-No *busca(Hash tabela, int chave);
+int inserir(Hash tabela, int chave, int info);
+No *buscar(Hash tabela, int chave);
 int remover(Hash tabela, int chave);
 int colisao(Hash tabela);
 
@@ -60,8 +60,11 @@ int main()
             printf("\nDigite o numero da chave de acesso: ");
             scanf("%d", &chave);
             setbuf(stdin, NULL);
-            pos = insere(tabela, chave, info);
-            printf("\nInserido na posicao %d!", pos);
+            pos = inserir(tabela, chave, info);
+            if (pos != -1)
+                printf("\nInserido na posicao %d!", pos);
+            else
+                printf("\nErro. Tente uma chave diferente!");
             printf("\nPressione [ENTER] para retornar ao menu.");
             setbuf(stdin, NULL);
             getchar();
@@ -70,7 +73,7 @@ int main()
         case 2:
             printf("\nDigite o numero da chave de acesso: ");
             scanf("%d", &chave);
-            aux = busca(tabela, chave);
+            aux = buscar(tabela, chave);
             if (aux != NULL)
             {
                 printf("\nNumero guardado: %d", aux->info);
@@ -122,7 +125,8 @@ int main()
     return 0;
 }
 
-int hash(int chave) //Método da multiplicacao.
+//Método da multiplicacao.
+int hash(int chave)
 {
     int posicao;
     int aux[7];
@@ -144,11 +148,12 @@ int hash(int chave) //Método da multiplicacao.
     return posicao;
 }
 
-int insere(Hash tabela, int chave, int info)
+int inserir(Hash tabela, int chave, int info)
 {
-    No *aux = busca(tabela, chave);
+    No *aux = buscar(tabela, chave);
     int h = hash(chave);
 
+    //Verifica chave repetida.
     if (aux == NULL)
     {
         aux = tabela[h];
@@ -190,7 +195,7 @@ int insere(Hash tabela, int chave, int info)
     }
 }
 
-No *busca(Hash tabela, int chave)
+No *buscar(Hash tabela, int chave)
 {
     int h = hash(chave);
     No *aux = tabela[h];
@@ -206,17 +211,18 @@ No *busca(Hash tabela, int chave)
 
 int remover(Hash tabela, int chave)
 {
-    No *aux = busca(tabela, chave);
+    No *aux = buscar(tabela, chave);
 
-    if (aux != NULL)
+    if (aux != NULL) //Verifica se a chave está cadastrada.
     {
         int h = hash(chave);
         aux = tabela[h];
 
-        if (aux != NULL)
+        if (aux != NULL) //Sem utilidade, REMOVER IF INUTIL.
         {
             No *ant;
 
+            //Verifica primeiro nó da lista.
             if (aux->chave == chave)
             {
                 ant = aux;
@@ -227,6 +233,7 @@ int remover(Hash tabela, int chave)
             }
             else
             {
+                //Verifica nós intermediários.
                 while (aux->prox != NULL)
                 {
                     ant = aux;
@@ -239,6 +246,7 @@ int remover(Hash tabela, int chave)
                         return 1;
                     }
                 }
+                //Verifica último nó da lista.
                 if (aux->chave == chave)
                 {
                     tabela[aux->pos] = NULL;
@@ -251,7 +259,8 @@ int remover(Hash tabela, int chave)
     return 0;
 }
 
-int colisao(Hash tabela) //Verifica posicao disponível na zona de colisão.
+//Verifica posicao disponível na zona de colisão.
+int colisao(Hash tabela)
 {
     for (int i = P; i < M; i++)
         if (tabela[i] == NULL)

@@ -61,7 +61,10 @@ int main()
             scanf("%d", &chave);
             setbuf(stdin, NULL);
             pos = inserir(tabela, chave, info);
-            printf("\nInserido na posicao %d!", pos);
+            if (pos != -1)
+                printf("\nInserido na posicao %d!", pos);
+            else
+                printf("\nErro. Tente uma chave diferente!");
             printf("\nPressione [ENTER] para retornar ao menu.");
             setbuf(stdin, NULL);
             getchar();
@@ -122,7 +125,8 @@ int main()
     return 0;
 }
 
-int hash(int chave) //Método da divisão.
+//Método da divisão.
+int hash(int chave)
 {
     return (chave % M);
 }
@@ -132,7 +136,8 @@ int inserir(Hash tabela, int chave, int info)
     No *aux = buscar(tabela, chave);
     int h = hash(chave);
 
-    if (aux == NULL)//Verifica chave repetida.
+    //Verifica chave repetida.
+    if (aux == NULL)
     {
         aux = tabela[h];
         //Verifica colisão.
@@ -149,7 +154,7 @@ int inserir(Hash tabela, int chave, int info)
         }
         else
         {
-             //h recebe primeira posição disponível da zona de colisão.
+            //h recebe primeira posição disponível da zona de colisão.
             h = colisao(tabela);
             if (h == -1)
             {
@@ -194,16 +199,16 @@ int remover(Hash tabela, int chave)
 {
     No *aux = buscar(tabela, chave);
 
-    if (aux != NULL)//Verifica se a chave está cadastrada.
+    if (aux != NULL) //Verifica se a chave está cadastrada.
     {
         int h = hash(chave);
         aux = tabela[h];
 
-        if (aux != NULL)//Sem utilidade, REMOVER IF INUTIL.
+        if (aux != NULL) //Sem utilidade, REMOVER IF INUTIL.
         {
             No *ant;
 
-             //Verifica primeiro nó da lista.
+            //Verifica primeiro nó da lista.
             if (aux->chave == chave)
             {
                 ant = aux;
@@ -245,5 +250,5 @@ int colisao(Hash tabela) //Verifica posicao disponível na zona de colisão.
     for (int i = P; i < M; i++)
         if (tabela[i] == NULL)
             return i;
-    return -1;//Caso não tenha mais espaço disponível.
+    return -1; //Caso não tenha mais espaço disponível.
 }

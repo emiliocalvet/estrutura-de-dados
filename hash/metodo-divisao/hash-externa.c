@@ -14,7 +14,7 @@ typedef No *Hash[M];
 
 int hash(int chave, int tam);
 int inserir(Hash tabela, int chave, int info);
-No *busca(Hash tabela, int chave);
+No *buscar(Hash tabela, int chave);
 int remover(Hash tabela, int chave);
 
 int main()
@@ -26,7 +26,8 @@ int main()
     Hash tabela;
     No *aux = NULL;
 
-    for (int i = 0; i < M; i++) //Inicializando meu vetor de ponteiros para No com endereços vazios.
+    //Inicializando vetor de ponteiros para No com endereços vazios
+    for (int i = 0; i < M; i++)
         tabela[i] = NULL;
 
     while (escolha_menu != -1)
@@ -34,7 +35,7 @@ int main()
         system("clear");
 
         printf(" ________________________________ \n");
-        printf("|######### HASH-INTERNA #########|\n");
+        printf("|######### HASH-EXTERNA #########|\n");
         printf("|                                |\n");
         printf("|          [1] INSERIR           |\n");
         printf("|          [2] BUSCAR            |\n");
@@ -57,7 +58,10 @@ int main()
             scanf("%d", &chave);
             setbuf(stdin, NULL);
             pos = inserir(tabela, chave, info);
-            printf("\nInserido na posicao %d!", pos);
+            if (pos != -1)
+                printf("\nInserido na posicao %d!", pos);
+            else
+                printf("\nErro. Tente uma chave diferente!"); 
             printf("\nPressione [ENTER] para retornar ao menu.");
             setbuf(stdin, NULL);
             getchar();
@@ -66,7 +70,7 @@ int main()
         case 2:
             printf("\nDigite o numero da chave de acesso: ");
             scanf("%d", &chave);
-            aux = busca(tabela, chave);
+            aux = buscar(tabela, chave);
             if (aux != NULL)
             {
                 printf("\nNumero guardado: %d", aux->info);
@@ -118,17 +122,19 @@ int main()
     return 0;
 }
 
-int hash(int chave, int tam) //Método da divisão.
+//Método da divisão.
+int hash(int chave, int tam) 
 {
     return (chave % tam);
 }
 
 int inserir(Hash tabela, int chave, int info)
 {
-    No *aux = busca(tabela, chave);
+    No *aux = buscar(tabela, chave);
     int h = hash(chave, M);
 
-    if (aux == NULL) //Verifica chave repetida.
+    //Verifica chave repetida.
+    if (aux == NULL) 
     {
         //Insere nó no inicio da lista de colisão externa.
         aux = (No *)malloc(sizeof(No));
@@ -136,11 +142,12 @@ int inserir(Hash tabela, int chave, int info)
         aux->info = info;
         aux->prox = tabela[h];
         tabela[h] = aux;
+        return h;
     }
-    return h;
+    return -1;
 }
 
-No *busca(Hash tabela, int chave)
+No *buscar(Hash tabela, int chave)
 {
     int h = hash(chave, M);
     No *aux = tabela[h];
@@ -157,7 +164,7 @@ No *busca(Hash tabela, int chave)
 
 int remover(Hash tabela, int chave)
 {
-    No *aux = busca(tabela, chave);
+    No *aux = buscar(tabela, chave);
     if (aux != NULL)
     {
         free(aux);

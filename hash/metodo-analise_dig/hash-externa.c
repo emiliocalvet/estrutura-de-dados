@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define M 100 //Tamanho da tabela.
-#define N 20 //Quantidade de chaves - (CASO ALTERADO, ATUALIZAR VETOR DE CHAVES).
-#define TAM_CHAVE 5  //Quantidade de digitos da chave - (CASO ALTERADO, ATUALIZAR VETOR DE CHAVES).
-#define TAM_POS 2    //Quantidade de digitos da posição gerada - (CASO ALTERADO, ATUALIZAR TAMANHO DA TABELA).
+#define M 100       //Tamanho da tabela.
+#define N 20        //Quantidade de chaves - (CASO ALTERADO, ATUALIZAR VETOR DE CHAVES).
+#define TAM_CHAVE 5 //Quantidade de digitos da chave - (CASO ALTERADO, ATUALIZAR VETOR DE CHAVES).
+#define TAM_POS 2   //Quantidade de digitos da posição gerada - (CASO ALTERADO, ATUALIZAR TAMANHO DA TABELA).
 
 typedef struct no
 {
@@ -34,14 +34,14 @@ void copia_vetor(float *vetor_origem, float *vetor_destino, int tam);
 
 /*======================================== Variáveis Globais ======================================*/
 int vetor_chaves[N] = {87437, 15568, 78694, 41491, 50159,
-                               69749, 71395, 84251, 97075, 49598,
-                               47987, 18470, 10033, 71079, 98093,
-                               79545, 20370, 31497, 40554, 79228};
+                       69749, 71395, 84251, 97075, 49598,
+                       47987, 18470, 10033, 71079, 98093,
+                       79545, 20370, 31497, 40554, 79228};
 
-int matriz_chaves[N][TAM_CHAVE]; //cada chave em formato de vetor.
-int quantidade_digitos[TAM_CHAVE][10];   //contagem de dígitos das chaves.
-float distribuicao_digitos[TAM_CHAVE];   //distribuicao de cada digito.
-int posicao_digitos[TAM_POS];            //posição dos dígitos de menor distribuição.
+int matriz_chaves[N][TAM_CHAVE];       //cada chave em formato de vetor.
+int quantidade_digitos[TAM_CHAVE][10]; //contagem de dígitos das chaves.
+float distribuicao_digitos[TAM_CHAVE]; //distribuicao de cada digito.
+int posicao_digitos[TAM_POS];          //posição dos dígitos de menor distribuição.
 
 /*======================================== Função Main ============================================*/
 int main()
@@ -55,7 +55,8 @@ int main()
     Hash tabela;
     No *aux = NULL;
 
-    for (int i = 0; i < M; i++) //Inicializando meu vetor de ponteiros para No com endereços vazios.
+    //Inicializando vetor de ponteiros para No com endereços vazios.
+    for (int i = 0; i < M; i++)
         tabela[i] = NULL;
 
     while (escolha_menu != -1)
@@ -112,7 +113,10 @@ int main()
                 scanf("%d", &chave);
                 setbuf(stdin, NULL);
                 pos = inserir(tabela, chave, info);
-                printf("\nInserido na posicao %d!", pos);
+                if (pos != -1)
+                    printf("\nInserido na posicao %d!", pos);
+                else
+                    printf("\nErro. Tente uma chave diferente!");
                 printf("\nPressione [ENTER] para retornar ao menu.");
                 setbuf(stdin, NULL);
                 getchar();
@@ -207,7 +211,7 @@ int inserir(Hash tabela, int chave, int info)
     No *aux = buscar(tabela, chave);
     int h = hash(chave);
 
-    if (aux == NULL)//Verifica chave repetida.
+    if (aux == NULL) //Verifica chave repetida.
     {
         //Insere nó no inicio da lista de colisão externa.
         aux = (No *)malloc(sizeof(No));
@@ -309,7 +313,7 @@ void analisar_dist()
                 posicao_digitos[i] = j;
 }
 
-//Faz análise das chaves para descobrir os digitos que formam a posicao da tabela. 
+//Faz análise das chaves para descobrir os digitos que formam a posicao da tabela.
 void analisar_digitos(int *chaves)
 {
     for (int i = 0; i < N; i++)
