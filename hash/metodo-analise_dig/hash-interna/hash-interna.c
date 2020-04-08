@@ -14,10 +14,11 @@ typedef struct no
 {
     int chave;
     int info;
-    int prox;
+    int pos;
+    struct no *prox;
 } No;
 
-typedef No *Hash[M];
+typedef No *Hash[M]; //Define o tipo Hash como um vetor de ponteiros para No de tamanho M.
 /*======================================== Escopo Funções ========================================*/
 
 int hash(int chave);
@@ -205,7 +206,7 @@ int main()
 }
 /*================================= Funções para tratamento de colisão ================================*/
 
-int insere(Hash tabela, int chave, int info)
+/*int insere(Hash tabela, int chave, int info)
 {
     No *aux = busca(tabela, chave);
     int h = hash(chave);
@@ -250,9 +251,55 @@ int insere(Hash tabela, int chave, int info)
         }
     }
     return -2;
+}*/
+
+int insere(Hash tabela, int chave, int info)
+{
+    No *aux = busca(tabela, chave);
+    int h = hash(chave);
+
+    if (aux == NULL)
+    {
+        aux = tabela[h];
+        //Verifica colisão.
+        if (aux == NULL)
+        {
+            //Insere elemento.
+            aux = (No *)malloc(sizeof(No));
+            aux->chave = chave;
+            aux->info = info;
+            aux->pos = h;
+            aux->prox = NULL;
+            tabela[h] = aux;
+            return h;
+        }
+        else
+        {
+            h = colisao(tabela);
+            if (h == -1)
+            {
+                printf("\nOVERFLOW\n");
+                return h;
+            }
+            else
+            {
+                while (aux->prox != NULL)
+                    aux = aux->prox;
+                //Insere elemento.
+                aux->prox = (No *)malloc(sizeof(No));
+                aux = aux->prox;
+                aux->chave = chave;
+                aux->info = info;
+                aux->pos = h;
+                aux->prox = NULL;
+                tabela[h] = aux;
+                return h;
+            }
+        }
+    }
 }
 
-No *busca(Hash tabela, int chave)
+/*No *busca(Hash tabela, int chave)
 {
     int h = hash(chave);
     No *aux = tabela[h];
@@ -278,16 +325,65 @@ No *busca(Hash tabela, int chave)
         }
     }
     return NULL;
+}*/
+
+No *busca(Hash tabela, int chave)
+{
+    int h = hash(chave);
+    No *aux = tabela[h];
+
+    while (aux != NULL)
+    {
+        if (aux->chave == chave)
+            return aux;
+        aux = aux->prox;
+    }
+    return NULL;
 }
 
 int remover(Hash tabela, int chave)
 {
     No *aux = busca(tabela, chave);
+
     if (aux != NULL)
     {
-        free(aux);
-        aux = NULL;
-        return 1;
+        int h = hash(chave);
+        aux = tabela[h];
+
+        if (aux != NULL)
+        {
+            No *ant;
+
+            if (aux->chave == chave)
+            {
+                ant = aux;
+                aux = aux->prox;
+                tabela[aux->pos] = NULL;
+                free(ant);
+                return 1;
+            }
+            else
+            {
+                while (aux->prox != NULL)
+                {
+                    ant = aux;
+                    aux = aux->prox;
+                    if (aux->chave == chave)
+                    {
+                        ant->prox = aux->prox;
+                        tabela[aux->pos] = NULL;
+                        free(aux);
+                        return 1;
+                    }
+                }
+                if (aux->chave == chave)
+                {
+                    tabela[aux->pos] = NULL;
+                    free(aux);
+                    return 1;
+                }
+            }
+        }
     }
     return 0;
 }
