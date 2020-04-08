@@ -104,15 +104,15 @@ int main()
         case 3:
             if (analisado)
             {
-                int aux;
+                int pos;
                 printf("\nDigite o numero deseja guardar: ");
                 scanf("%d", &info);
                 setbuf(stdin, NULL);
                 printf("\nDigite o numero da chave de acesso: ");
                 scanf("%d", &chave);
                 setbuf(stdin, NULL);
-                aux = inserir(tabela, chave, info);
-                printf("\nInserido na posicao %d!", aux);
+                pos = inserir(tabela, chave, info);
+                printf("\nInserido na posicao %d!", pos);
                 printf("\nPressione [ENTER] para retornar ao menu.");
                 setbuf(stdin, NULL);
                 getchar();

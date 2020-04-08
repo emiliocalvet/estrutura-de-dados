@@ -10,10 +10,10 @@ typedef struct no
     struct no *prox;
 } No;
 
-typedef No* Hash[M];
+typedef No *Hash[M];
 
 int hash(int chave, int tam);
-void insere(Hash tabela, int chave, int info);
+int inserir(Hash tabela, int chave, int info);
 No *busca(Hash tabela, int chave);
 int remover(Hash tabela, int chave);
 
@@ -33,14 +33,14 @@ int main()
     {
         system("clear");
 
-        printf(" ___________________________________________ \n");
-        printf("|############### HASH-EXTERNA ##############|\n");
-        printf("|                                           |\n");
-        printf("|                [1] INSERIR                |\n");
-        printf("|                [2] BUSCAR                 |\n");
-        printf("|                [3] REMOVER                |\n");
-        printf("|                [4] SAIR                   |\n");
-        printf("|___________________________________________|\n");
+        printf(" ________________________________ \n");
+        printf("|######### HASH-INTERNA #########|\n");
+        printf("|                                |\n");
+        printf("|          [1] INSERIR           |\n");
+        printf("|          [2] BUSCAR            |\n");
+        printf("|          [3] REMOVER           |\n");
+        printf("|          [4] SAIR              |\n");
+        printf("|________________________________|\n");
         printf("\n");
 
         printf("Digite a opcao desejada: ");
@@ -48,14 +48,19 @@ int main()
 
         switch (escolha_menu)
         {
-        case 1:
+        case 1:;
+            int pos;
             printf("\nDigite o numero deseja guardar: ");
             scanf("%d", &info);
             setbuf(stdin, NULL);
             printf("\nDigite o numero da chave de acesso: ");
             scanf("%d", &chave);
             setbuf(stdin, NULL);
-            insere(tabela, chave, info);
+            pos = inserir(tabela, chave, info);
+            printf("\nInserido na posicao %d!", pos);
+            printf("\nPressione [ENTER] para retornar ao menu.");
+            setbuf(stdin, NULL);
+            getchar();
             break;
 
         case 2:
@@ -113,24 +118,26 @@ int main()
     return 0;
 }
 
-int hash(int chave, int tam)//Método da divisão.
+int hash(int chave, int tam) //Método da divisão.
 {
     return (chave % tam);
 }
 
-void insere(Hash tabela, int chave, int info)
+int inserir(Hash tabela, int chave, int info)
 {
     No *aux = busca(tabela, chave);
     int h = hash(chave, M);
 
-    if (aux == NULL) // não encontrou o elemento.
+    if (aux == NULL) //Verifica chave repetida.
     {
+        //Insere nó no inicio da lista de colisão externa.
         aux = (No *)malloc(sizeof(No));
         aux->chave = chave;
         aux->info = info;
         aux->prox = tabela[h];
         tabela[h] = aux;
     }
+    return h;
 }
 
 No *busca(Hash tabela, int chave)
@@ -138,6 +145,7 @@ No *busca(Hash tabela, int chave)
     int h = hash(chave, M);
     No *aux = tabela[h];
 
+    //Em caso de colisão, procura nó que corresponde a chave na lista encadeada.
     while (aux != NULL)
     {
         if (aux->chave == chave)

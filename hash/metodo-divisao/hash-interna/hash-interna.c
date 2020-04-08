@@ -16,8 +16,8 @@ typedef struct no
 typedef No *Hash[M];
 
 int hash(int chave);
-int insere(Hash tabela, int chave, int info);
-No *busca(Hash tabela, int chave);
+int inserir(Hash tabela, int chave, int info);
+No *buscar(Hash tabela, int chave);
 int remover(Hash tabela, int chave);
 int colisao(Hash tabela);
 
@@ -60,7 +60,7 @@ int main()
             printf("\nDigite o numero da chave de acesso: ");
             scanf("%d", &chave);
             setbuf(stdin, NULL);
-            pos = insere(tabela, chave, info);
+            pos = inserir(tabela, chave, info);
             printf("\nInserido na posicao %d!", pos);
             printf("\nPressione [ENTER] para retornar ao menu.");
             setbuf(stdin, NULL);
@@ -70,7 +70,7 @@ int main()
         case 2:
             printf("\nDigite o numero da chave de acesso: ");
             scanf("%d", &chave);
-            aux = busca(tabela, chave);
+            aux = buscar(tabela, chave);
             if (aux != NULL)
             {
                 printf("\nNumero guardado: %d", aux->info);
@@ -127,18 +127,18 @@ int hash(int chave) //Método da divisão.
     return (chave % M);
 }
 
-int insere(Hash tabela, int chave, int info)
+int inserir(Hash tabela, int chave, int info)
 {
-    No *aux = busca(tabela, chave);
+    No *aux = buscar(tabela, chave);
     int h = hash(chave);
 
-    if (aux == NULL)
+    if (aux == NULL)//Verifica chave repetida.
     {
         aux = tabela[h];
         //Verifica colisão.
         if (aux == NULL)
         {
-            //Insere elemento.
+            //Insere nó na posição h.
             aux = (No *)malloc(sizeof(No));
             aux->chave = chave;
             aux->info = info;
@@ -149,6 +149,7 @@ int insere(Hash tabela, int chave, int info)
         }
         else
         {
+             //h recebe primeira posição disponível da zona de colisão.
             h = colisao(tabela);
             if (h == -1)
             {
@@ -157,9 +158,10 @@ int insere(Hash tabela, int chave, int info)
             }
             else
             {
+                //Percorre até o fim da lista de colisão interna
                 while (aux->prox != NULL)
                     aux = aux->prox;
-                //Insere elemento.
+                //Insere nó.
                 aux->prox = (No *)malloc(sizeof(No));
                 aux = aux->prox;
                 aux->chave = chave;
@@ -173,11 +175,12 @@ int insere(Hash tabela, int chave, int info)
     }
 }
 
-No *busca(Hash tabela, int chave)
+No *buscar(Hash tabela, int chave)
 {
     int h = hash(chave);
     No *aux = tabela[h];
 
+    //Em caso de colisão, procura nó que corresponde a chave na lista encadeada.
     while (aux != NULL)
     {
         if (aux->chave == chave)
@@ -189,17 +192,18 @@ No *busca(Hash tabela, int chave)
 
 int remover(Hash tabela, int chave)
 {
-    No *aux = busca(tabela, chave);
+    No *aux = buscar(tabela, chave);
 
-    if (aux != NULL)
+    if (aux != NULL)//Verifica se a chave está cadastrada.
     {
         int h = hash(chave);
         aux = tabela[h];
 
-        if (aux != NULL)
+        if (aux != NULL)//Sem utilidade, REMOVER IF INUTIL.
         {
             No *ant;
 
+             //Verifica primeiro nó da lista.
             if (aux->chave == chave)
             {
                 ant = aux;
@@ -210,6 +214,7 @@ int remover(Hash tabela, int chave)
             }
             else
             {
+                //Verifica nós intermediários.
                 while (aux->prox != NULL)
                 {
                     ant = aux;
@@ -222,6 +227,7 @@ int remover(Hash tabela, int chave)
                         return 1;
                     }
                 }
+                //Verifica último nó da lista
                 if (aux->chave == chave)
                 {
                     tabela[aux->pos] = NULL;
@@ -239,5 +245,5 @@ int colisao(Hash tabela) //Verifica posicao disponível na zona de colisão.
     for (int i = P; i < M; i++)
         if (tabela[i] == NULL)
             return i;
-    return -1;
+    return -1;//Caso não tenha mais espaço disponível.
 }
