@@ -67,7 +67,7 @@ int main()
         system("clear");
 
         printf(" ________________________________________ \n");
-        printf("|############## HASH-INTERNA ############|\n");
+        printf("|############# HASH-INTERNA #############|\n");
         printf("|                                        |\n");
         printf("|          [1] ANALISAR DIGITOS          |\n");
         printf("|          [2] EXIBIR ANALISE            |\n");
@@ -206,53 +206,6 @@ int main()
 }
 /*================================= Funções para tratamento de colisão ================================*/
 
-/*int insere(Hash tabela, int chave, int info)
-{
-    No *aux = busca(tabela, chave);
-    int h = hash(chave);
-
-    //Verifica chave repetida.
-    if (aux == NULL)
-    {
-        aux = tabela[h];
-        //Verifica colisão.
-        if (aux == NULL)
-        {
-            //Insere elemento.
-            aux = (No *)malloc(sizeof(No));
-            aux->chave = chave;
-            aux->info = info;
-            aux->prox = -1;
-            tabela[h] = aux;
-            return h;
-        }
-        else
-        {
-            h = colisao(tabela);
-            if (h == -1)
-            {
-                printf("\nOVERFLOW\n");
-                return h;
-            }
-            else
-            {
-                //Percorre a lista de colisão interna até o último elemento.
-                while (aux->prox != -1)
-                    aux = tabela[aux->prox];
-                aux->prox = h;
-                //Insere elemento.
-                aux = (No *)malloc(sizeof(No));
-                aux->chave = chave;
-                aux->info = info;
-                aux->prox = -1;
-                tabela[h] = aux;
-                return h;
-            }
-        }
-    }
-    return -2;
-}*/
-
 int insere(Hash tabela, int chave, int info)
 {
     No *aux = busca(tabela, chave);
@@ -298,34 +251,6 @@ int insere(Hash tabela, int chave, int info)
         }
     }
 }
-
-/*No *busca(Hash tabela, int chave)
-{
-    int h = hash(chave);
-    No *aux = tabela[h];
-
-    if (aux != NULL)
-    {
-        if (aux->prox == -1)
-        {
-            if (aux->chave == chave)
-                return aux;
-        }
-        else
-        {
-            while (aux->prox != -1)
-            {
-                if (aux->chave == chave)
-                    return aux;
-                aux = tabela[aux->prox];
-                if (aux->prox == -1)
-                    if (aux->chave == chave)
-                        return aux;
-            }
-        }
-    }
-    return NULL;
-}*/
 
 No *busca(Hash tabela, int chave)
 {

@@ -9,7 +9,8 @@ typedef struct no
 {
     int chave;
     int info;
-    int prox;
+    int pos;
+    struct no *prox;
 } No;
 
 typedef No *Hash[M];
@@ -36,15 +37,14 @@ int main()
     {
         system("clear");
 
-        printf(" ___________________________________________ \n");
-        printf("|############### HASH-INTERNA ##############|\n");
-        printf("|                                           |\n");
-        printf("|                [1] INSERIR                |\n");
-        printf("|                [2] BUSCAR                 |\n");
-        printf("|                [3] REMOVER                |\n");
-        printf("|                [4] SAIR                   |\n");
-        printf("|___________________________________________|\n");
-
+        printf(" ________________________________ \n");
+        printf("|######### HASH-INTERNA #########|\n");
+        printf("|                                |\n");
+        printf("|          [1] INSERIR           |\n");
+        printf("|          [2] BUSCAR            |\n");
+        printf("|          [3] REMOVER           |\n");
+        printf("|          [4] SAIR              |\n");
+        printf("|________________________________|\n");
         printf("\n");
 
         printf("Digite a opcao desejada: ");
@@ -132,7 +132,6 @@ int insere(Hash tabela, int chave, int info)
     No *aux = busca(tabela, chave);
     int h = hash(chave);
 
-    //Verifica chave repetida.
     if (aux == NULL)
     {
         aux = tabela[h];
@@ -143,7 +142,8 @@ int insere(Hash tabela, int chave, int info)
             aux = (No *)malloc(sizeof(No));
             aux->chave = chave;
             aux->info = info;
-            aux->prox = -1;
+            aux->pos = h;
+            aux->prox = NULL;
             tabela[h] = aux;
             return h;
         }
@@ -157,21 +157,20 @@ int insere(Hash tabela, int chave, int info)
             }
             else
             {
-                //Percorre a lista de colisão interna até o último elemento.
-                while (aux->prox != -1)
-                    aux = tabela[aux->prox];
-                aux->prox = h;
+                while (aux->prox != NULL)
+                    aux = aux->prox;
                 //Insere elemento.
-                aux = (No *)malloc(sizeof(No));
+                aux->prox = (No *)malloc(sizeof(No));
+                aux = aux->prox;
                 aux->chave = chave;
                 aux->info = info;
-                aux->prox = -1;
+                aux->pos = h;
+                aux->prox = NULL;
                 tabela[h] = aux;
                 return h;
             }
         }
     }
-    return -2;
 }
 
 No *busca(Hash tabela, int chave)
@@ -179,25 +178,11 @@ No *busca(Hash tabela, int chave)
     int h = hash(chave);
     No *aux = tabela[h];
 
-    if (aux != NULL)
+    while (aux != NULL)
     {
-        if (aux->prox == -1)
-        {
-            if (aux->chave == chave)
-                return aux;
-        }
-        else
-        {
-            while (aux->prox != -1)
-            {
-                if (aux->chave == chave)
-                    return aux;
-                aux = tabela[aux->prox];
-                if (aux->prox == -1)
-                    if (aux->chave == chave)
-                        return aux;
-            }
-        }
+        if (aux->chave == chave)
+            return aux;
+        aux = aux->prox;
     }
     return NULL;
 }
@@ -205,11 +190,46 @@ No *busca(Hash tabela, int chave)
 int remover(Hash tabela, int chave)
 {
     No *aux = busca(tabela, chave);
+
     if (aux != NULL)
     {
-        free(aux);
-        aux = NULL;
-        return 1;
+        int h = hash(chave);
+        aux = tabela[h];
+
+        if (aux != NULL)
+        {
+            No *ant;
+
+            if (aux->chave == chave)
+            {
+                ant = aux;
+                aux = aux->prox;
+                tabela[aux->pos] = NULL;
+                free(ant);
+                return 1;
+            }
+            else
+            {
+                while (aux->prox != NULL)
+                {
+                    ant = aux;
+                    aux = aux->prox;
+                    if (aux->chave == chave)
+                    {
+                        ant->prox = aux->prox;
+                        tabela[aux->pos] = NULL;
+                        free(aux);
+                        return 1;
+                    }
+                }
+                if (aux->chave == chave)
+                {
+                    tabela[aux->pos] = NULL;
+                    free(aux);
+                    return 1;
+                }
+            }
+        }
     }
     return 0;
 }
