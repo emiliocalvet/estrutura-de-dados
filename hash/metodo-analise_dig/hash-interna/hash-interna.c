@@ -14,7 +14,7 @@ typedef struct no
 {
     int chave;
     int info;
-    int pos;
+    int pos; //Guarda a osição da tabela que faz referencia ao nó. 
     struct no *prox;
 } No;
 
@@ -22,8 +22,8 @@ typedef No *Hash[M]; //Define o tipo Hash como um vetor de ponteiros para No de 
 /*======================================== Escopo Funções ========================================*/
 
 int hash(int chave);
-int insere(Hash tabela, int chave, int info);
-No *busca(Hash tabela, int chave);
+int inserir(Hash tabela, int chave, int info);
+No *buscar(Hash tabela, int chave);
 int remover(Hash tabela, int chave);
 int colisao(Hash tabela);
 void dec_to_vetor(int decimal, int *vetor, int tam);
@@ -54,6 +54,7 @@ int main()
     int info = 0;
     int chave = 0;
     int escolha_menu = 0;
+    //Usada pra saber se os dígitos já foram analisados.
     int analisado = 0;
 
     Hash tabela;
@@ -115,7 +116,7 @@ int main()
                 printf("\nDigite o numero da chave de acesso: ");
                 scanf("%d", &chave);
                 setbuf(stdin, NULL);
-                pos = insere(tabela, chave, info);
+                pos = inserir(tabela, chave, info);
                 printf("\nInserido na posicao %d!", pos);
                 printf("\nPressione [ENTER] para retornar ao menu.");
                 setbuf(stdin, NULL);
@@ -135,7 +136,7 @@ int main()
             {
                 printf("\nDigite o numero da chave de acesso: ");
                 scanf("%d", &chave);
-                aux = busca(tabela, chave);
+                aux = buscar(tabela, chave);
                 if (aux != NULL)
                 {
                     printf("\nNumero guardado: %d", aux->info);
@@ -206,18 +207,18 @@ int main()
 }
 /*================================= Funções para tratamento de colisão ================================*/
 
-int insere(Hash tabela, int chave, int info)
+int inserir(Hash tabela, int chave, int info)
 {
-    No *aux = busca(tabela, chave);
+    No *aux = buscar(tabela, chave);
     int h = hash(chave);
 
-    if (aux == NULL)
+    if (aux == NULL)//Verifica chave repetida.
     {
         aux = tabela[h];
         //Verifica colisão.
         if (aux == NULL)
         {
-            //Insere elemento.
+            //Insere nó na posição h.
             aux = (No *)malloc(sizeof(No));
             aux->chave = chave;
             aux->info = info;
@@ -228,6 +229,7 @@ int insere(Hash tabela, int chave, int info)
         }
         else
         {
+            //h recebe primeira posição disponível da zona de colisão.
             h = colisao(tabela);
             if (h == -1)
             {
@@ -236,9 +238,10 @@ int insere(Hash tabela, int chave, int info)
             }
             else
             {
+                //Percorre até o fim da lista de colisão interna.
                 while (aux->prox != NULL)
                     aux = aux->prox;
-                //Insere elemento.
+                //Insere nó.
                 aux->prox = (No *)malloc(sizeof(No));
                 aux = aux->prox;
                 aux->chave = chave;
@@ -252,11 +255,12 @@ int insere(Hash tabela, int chave, int info)
     }
 }
 
-No *busca(Hash tabela, int chave)
+No *buscar(Hash tabela, int chave)
 {
     int h = hash(chave);
     No *aux = tabela[h];
 
+    //Em caso de colisão, procura nó que corresponde a chave na lista encadeada.
     while (aux != NULL)
     {
         if (aux->chave == chave)
@@ -268,17 +272,18 @@ No *busca(Hash tabela, int chave)
 
 int remover(Hash tabela, int chave)
 {
-    No *aux = busca(tabela, chave);
+    No *aux = buscar(tabela, chave);
 
-    if (aux != NULL)
+    if (aux != NULL)//Verifica se a chave está cadastrada.
     {
         int h = hash(chave);
         aux = tabela[h];
 
-        if (aux != NULL)
+        if (aux != NULL)//Sem utilidade, REMOVER IF INUTIL.
         {
             No *ant;
 
+            //Verifica primeiro nó da lista.
             if (aux->chave == chave)
             {
                 ant = aux;
@@ -289,6 +294,7 @@ int remover(Hash tabela, int chave)
             }
             else
             {
+                //Verifica nós intermediários.
                 while (aux->prox != NULL)
                 {
                     ant = aux;
@@ -301,6 +307,8 @@ int remover(Hash tabela, int chave)
                         return 1;
                     }
                 }
+
+                //Verifica último nó da lista
                 if (aux->chave == chave)
                 {
                     tabela[aux->pos] = NULL;
@@ -313,21 +321,26 @@ int remover(Hash tabela, int chave)
     return 0;
 }
 
-int colisao(Hash tabela) //Verifica posicao disponível na zona de colisão.
+int colisao(Hash tabela) //Verifica posicao disponível na zona de colisão e retorna.
 {
     for (int i = P; i < M; i++)
         if (tabela[i] == NULL)
             return i;
-    return -1;
+    return -1;//Caso não tenha mais espaço disponível.
 }
 /*================================ Funções para análise dos dígitos ==================================*/
 
 int hash(int chave)
 {
     int posicao = 0;
+    //Guarda cada digito da chave em uma posicao.
     int aux[TAM_CHAVE];
+    //Utilizado para gerar a posiçâo da tabela em decimal.
     int mult = pow(10, (TAM_POS - 1));
+    //Copia a chave para vetor aux.
     dec_to_vetor(chave, aux, TAM_CHAVE);
+
+    //Pega o(s) digito(s) escolhido(s) e faz a posicao da tabela.
     for (int i = 0; i < TAM_POS; i++)
     {
         posicao = posicao + aux[posicao_digitos[i]] * mult;
@@ -336,6 +349,7 @@ int hash(int chave)
     return posicao;
 }
 
+//Separa cada digito em uma posicao do vetor.
 void dec_to_vetor(int decimal, int *vetor, int tam)
 {
     for (int i = 0; i < tam; i++)
@@ -345,6 +359,7 @@ void dec_to_vetor(int decimal, int *vetor, int tam)
     }
 }
 
+//Conta os dígitos em cada dígito da chave.
 void contar_digitos()
 {
     for (int i = 0; i < TAM_CHAVE; i++)
@@ -354,6 +369,7 @@ void contar_digitos()
                     quantidade_digitos[i][k]++;
 }
 
+//Calcula a distribuição dos dígitos.
 void calcular_dist()
 {
     for (int i = 0; i < TAM_CHAVE; i++)
@@ -364,6 +380,7 @@ void calcular_dist()
                  pow((j - (N / 10)), 2));
 }
 
+//Ordena os digitos em ordem crescente de acordo com a distribuição.
 void analisar_dist()
 {
     float aux[TAM_CHAVE];
@@ -375,6 +392,7 @@ void analisar_dist()
                 posicao_digitos[i] = j;
 }
 
+//Faz análise das chaves para descobrir os digitos que formam a posicao da tabela. 
 void analisar_digitos(int *chaves)
 {
     for (int i = 0; i < N; i++)
@@ -385,6 +403,7 @@ void analisar_digitos(int *chaves)
     analisar_dist();
 }
 
+//Mostra na tela os detalhes da análise realizada.
 void exibir_analise()
 {
     printf("\n== INFORMACOES SOBRE A ANALISE ==\n\n");
@@ -414,6 +433,7 @@ void exibir_analise()
     getchar();
 }
 
+//Limpa os vetores antes de realizar análise.
 void limpar_analise()
 {
     for (int i = 0; i < TAM_CHAVE; i++)
@@ -424,6 +444,7 @@ void limpar_analise()
     }
 }
 
+//Algoritmo de ordenação.
 void insertion_sort(float *vetor, int tam)
 {
     int i, j;
@@ -442,6 +463,7 @@ void insertion_sort(float *vetor, int tam)
     }
 }
 
+//Realiza cópia de vetor (origem e destino devem ter msm tam).
 void copia_vetor(float *vetor_origem, float *vetor_destino, int tam)
 {
     for (int i = 0; i < tam; i++)
