@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define M 127
+#define M 127//Tamanho da tabela.
 
 typedef struct no
 {
@@ -12,7 +12,7 @@ typedef struct no
 
 typedef No *Hash[M];
 
-int hash(int chave, int tam);
+int hash(int chave);
 int inserir(Hash tabela, int chave, int info);
 No *buscar(Hash tabela, int chave);
 int remover(Hash tabela, int chave);
@@ -123,18 +123,17 @@ int main()
 }
 
 //Método da divisão.
-int hash(int chave, int tam) 
+int hash(int chave) 
 {
-    return (chave % tam);
+    return (chave % M);
 }
 
 int inserir(Hash tabela, int chave, int info)
 {
     No *aux = buscar(tabela, chave);
-    int h = hash(chave, M);
+    int h = hash(chave);
 
-    //Verifica chave repetida.
-    if (aux == NULL) 
+    if (aux == NULL) //Verifica chave repetida.
     {
         //Insere nó no inicio da lista de colisão externa.
         aux = (No *)malloc(sizeof(No));
@@ -142,14 +141,13 @@ int inserir(Hash tabela, int chave, int info)
         aux->info = info;
         aux->prox = tabela[h];
         tabela[h] = aux;
-        return h;
     }
-    return -1;
+    return h;
 }
 
 No *buscar(Hash tabela, int chave)
 {
-    int h = hash(chave, M);
+    int h = hash(chave);
     No *aux = tabela[h];
 
     //Em caso de colisão, procura nó que corresponde a chave na lista encadeada.
@@ -165,11 +163,55 @@ No *buscar(Hash tabela, int chave)
 int remover(Hash tabela, int chave)
 {
     No *aux = buscar(tabela, chave);
-    if (aux != NULL)
+
+    if (aux != NULL) //Verifica se a chave está cadastrada.
     {
-        free(aux);
-        aux = NULL;
-        return 1;
+        int h = hash(chave);
+        aux = tabela[h];
+
+        No *ant;
+
+        //Verifica primeiro nó da lista.
+        if (aux->chave == chave)
+        {
+            if (aux->prox == NULL)
+            {
+                tabela[h] = NULL;
+                free(aux);
+                return 1;
+            }
+            else
+            {
+                ant = aux;
+                aux = aux->prox;
+                tabela[h] = aux;
+                free(ant);
+                return 1;
+            }
+        }
+        else
+        {
+            //Verifica nós intermediários.
+            while (aux->prox != NULL)
+            {
+                ant = aux;
+                aux = aux->prox;
+                if (aux->chave == chave)
+                {
+                    ant->prox = aux->prox;
+                    free(aux);
+                    return 1;
+                }
+            }
+
+            //Verifica último nó da lista
+            if (aux->chave == chave)
+            {
+                ant->prox = NULL;   
+                free(aux);
+                return 1;
+            }
+        }
     }
     return 0;
 }

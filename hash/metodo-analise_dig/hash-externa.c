@@ -204,8 +204,8 @@ int main()
     }
     return 0;
 }
-
 /*================================= Funções para tratamento de colisão ================================*/
+
 int inserir(Hash tabela, int chave, int info)
 {
     No *aux = buscar(tabela, chave);
@@ -241,11 +241,55 @@ No *buscar(Hash tabela, int chave)
 int remover(Hash tabela, int chave)
 {
     No *aux = buscar(tabela, chave);
-    if (aux != NULL)
+
+    if (aux != NULL) //Verifica se a chave está cadastrada.
     {
-        free(aux);
-        aux = NULL;
-        return 1;
+        int h = hash(chave);
+        aux = tabela[h];
+
+        No *ant;
+
+        //Verifica primeiro nó da lista.
+        if (aux->chave == chave)
+        {
+            if (aux->prox == NULL)
+            {
+                tabela[h] = NULL;
+                free(aux);
+                return 1;
+            }
+            else
+            {
+                ant = aux;
+                aux = aux->prox;
+                tabela[h] = aux;
+                free(ant);
+                return 1;
+            }
+        }
+        else
+        {
+            //Verifica nós intermediários.
+            while (aux->prox != NULL)
+            {
+                ant = aux;
+                aux = aux->prox;
+                if (aux->chave == chave)
+                {
+                    ant->prox = aux->prox;
+                    free(aux);
+                    return 1;
+                }
+            }
+
+            //Verifica último nó da lista
+            if (aux->chave == chave)
+            {
+                ant->prox = NULL;   
+                free(aux);
+                return 1;
+            }
+        }
     }
     return 0;
 }

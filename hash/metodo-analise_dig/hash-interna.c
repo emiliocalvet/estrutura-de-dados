@@ -283,42 +283,50 @@ int remover(Hash tabela, int chave)
         int h = hash(chave);
         aux = tabela[h];
 
-        if (aux != NULL) //Sem utilidade, REMOVER IF INUTIL.
-        {
-            No *ant;
+        No *ant;
 
-            //Verifica primeiro nó da lista.
-            if (aux->chave == chave)
+        //Verifica primeiro nó da lista.
+        if (aux->chave == chave)
+        {
+            if (aux->prox == NULL)
             {
-                ant = aux;
-                aux = aux->prox;
                 tabela[aux->pos] = NULL;
-                free(ant);
+                free(aux);
                 return 1;
             }
             else
             {
-                //Verifica nós intermediários.
-                while (aux->prox != NULL)
-                {
-                    ant = aux;
-                    aux = aux->prox;
-                    if (aux->chave == chave)
-                    {
-                        ant->prox = aux->prox;
-                        tabela[aux->pos] = NULL;
-                        free(aux);
-                        return 1;
-                    }
-                }
-
-                //Verifica último nó da lista
+                ant = aux;
+                aux = aux->prox;
+                tabela[aux->pos] = NULL;
+                aux->pos = ant->pos;
+                tabela[ant->pos] = aux;
+                free(ant);
+                return 1;
+            }
+        }
+        else
+        {
+            //Verifica nós intermediários.
+            while (aux->prox != NULL)
+            {
+                ant = aux;
+                aux = aux->prox;
                 if (aux->chave == chave)
                 {
+                    ant->prox = aux->prox;
                     tabela[aux->pos] = NULL;
                     free(aux);
                     return 1;
                 }
+            }
+
+            //Verifica último nó da lista
+            if (aux->chave == chave)
+            {
+                tabela[aux->pos] = NULL;
+                free(aux);
+                return 1;
             }
         }
     }

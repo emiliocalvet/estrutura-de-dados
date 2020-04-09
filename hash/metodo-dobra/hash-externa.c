@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define M 32//O endereco base possui 5bits.
+#define M 32                    //Tamanho da tabela.
+#define CHAVE_BIT 8             //Número de bits da chave (Escolher numeros pares).
+#define BASE_BIT (CHAVE_BIT / 2)//Número de bits do endereço base.
 
 typedef struct no
 {
@@ -12,11 +14,11 @@ typedef struct no
 } No;
 
 typedef No *Hash[M];
-int buffer_bin[8];
+int buffer_bin[CHAVE_BIT];
 
 int *dec_to_bin(int dec);
 int bin_to_dec(int *bin);
-int hash(int chave, int tam);
+int hash(int chave);
 int inserir(Hash tabela, int chave, int info);
 No *buscar(Hash tabela, int chave);
 int remover(Hash tabela, int chave);
@@ -129,7 +131,7 @@ int main()
 //Transforma de decimal para binário.
 int *dec_to_bin(int dec)
 {
-    for (int i = 9; i >= 0; i--)
+    for (int i = (CHAVE_BIT - 1); i >= 0; i--)
     {
         if (dec % 2 == 0)
             buffer_bin[i] = 0;
@@ -145,28 +147,28 @@ int bin_to_dec(int *bin)
 {
     int dec = 0;
 
-    for (int i = 4; i >= 0; i--)
+    for (int i = (BASE_BIT - 1); i >= 0; i--)
     {
-        dec = dec + (bin[i] * pow(2, (4 - i)));
+        dec = dec + (bin[i] * pow(2, (BASE_BIT - i)));
     }
 
     return dec;
 }
 
 //Método da dobra.
-int hash(int chave, int tam)
+int hash(int chave)
 {
     int *chave_bin = dec_to_bin(chave);
-    int pos_bin[4];
+    int pos_bin[BASE_BIT];
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < BASE_BIT; i++)
     {
         //Operação OUEX.
-        pos_bin[i] = chave_bin[i] ^ chave_bin[i + 5];
+        pos_bin[i] = chave_bin[i] ^ chave_bin[i + BASE_BIT];
         //Operação OU
-        //pos_bin[i] = chave_bin[i] | chave_bin[i + 5];
+        //pos_bin[i] = chave_bin[i] | chave_bin[i + (CHAVE_BIT / 2)];
         //Operação E.
-        //pos_bin[i] = chave_bin[i] & chave_bin[i + 5];
+        //pos_bin[i] = chave_bin[i] & chave_bin[i + (CHAVE_BIT / 2)];
     }
     int posicao = bin_to_dec(pos_bin);
     return posicao;
@@ -175,10 +177,9 @@ int hash(int chave, int tam)
 int inserir(Hash tabela, int chave, int info)
 {
     No *aux = buscar(tabela, chave);
-    int h = hash(chave, M);
+    int h = hash(chave);
 
-    //Verifica chave repetida.
-    if (aux == NULL)
+    if (aux == NULL) //Verifica chave repetida.
     {
         //Insere nó no inicio da lista de colisão externa.
         aux = (No *)malloc(sizeof(No));
@@ -193,7 +194,7 @@ int inserir(Hash tabela, int chave, int info)
 
 No *buscar(Hash tabela, int chave)
 {
-    int h = hash(chave, M);
+    int h = hash(chave);
     No *aux = tabela[h];
 
     //Em caso de colisão, procura nó que corresponde a chave na lista encadeada.
@@ -209,11 +210,55 @@ No *buscar(Hash tabela, int chave)
 int remover(Hash tabela, int chave)
 {
     No *aux = buscar(tabela, chave);
-    if (aux != NULL)
+
+    if (aux != NULL) //Verifica se a chave está cadastrada.
     {
-        free(aux);
-        aux = NULL;
-        return 1;
+        int h = hash(chave);
+        aux = tabela[h];
+
+        No *ant;
+
+        //Verifica primeiro nó da lista.
+        if (aux->chave == chave)
+        {
+            if (aux->prox == NULL)
+            {
+                tabela[h] = NULL;
+                free(aux);
+                return 1;
+            }
+            else
+            {
+                ant = aux;
+                aux = aux->prox;
+                tabela[h] = aux;
+                free(ant);
+                return 1;
+            }
+        }
+        else
+        {
+            //Verifica nós intermediários.
+            while (aux->prox != NULL)
+            {
+                ant = aux;
+                aux = aux->prox;
+                if (aux->chave == chave)
+                {
+                    ant->prox = aux->prox;
+                    free(aux);
+                    return 1;
+                }
+            }
+
+            //Verifica último nó da lista
+            if (aux->chave == chave)
+            {
+                ant->prox = NULL;
+                free(aux);
+                return 1;
+            }
+        }
     }
     return 0;
 }

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define M 127
+
+#define M 127 //Tamanho da tabela (USAR CHAVES DE 4 DÍGITOS).
 
 typedef struct no
 {
@@ -125,12 +126,12 @@ int main()
 int hash(int chave)
 {
     int posicao;
-    int aux[7];
+    int aux[8];
     chave = chave * chave;
 
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < 8; i++)
     {
-        aux[6 - i] = chave % 10;
+        aux[7 - i] = chave % 10;
         chave = chave / 10;
     }
 
@@ -147,8 +148,7 @@ int inserir(Hash tabela, int chave, int info)
     No *aux = buscar(tabela, chave);
     int h = hash(chave);
 
-    //Verifica chave repetida.
-    if (aux == NULL)
+    if (aux == NULL) //Verifica chave repetida.
     {
         //Insere nó no inicio da lista de colisão externa.
         aux = (No *)malloc(sizeof(No));
@@ -179,11 +179,55 @@ No *buscar(Hash tabela, int chave)
 int remover(Hash tabela, int chave)
 {
     No *aux = buscar(tabela, chave);
-    if (aux != NULL)
+
+    if (aux != NULL) //Verifica se a chave está cadastrada.
     {
-        free(aux);
-        aux = NULL;
-        return 1;
+        int h = hash(chave);
+        aux = tabela[h];
+
+        No *ant;
+
+        //Verifica primeiro nó da lista.
+        if (aux->chave == chave)
+        {
+            if (aux->prox == NULL)
+            {
+                tabela[h] = NULL;
+                free(aux);
+                return 1;
+            }
+            else
+            {
+                ant = aux;
+                aux = aux->prox;
+                tabela[h] = aux;
+                free(ant);
+                return 1;
+            }
+        }
+        else
+        {
+            //Verifica nós intermediários.
+            while (aux->prox != NULL)
+            {
+                ant = aux;
+                aux = aux->prox;
+                if (aux->chave == chave)
+                {
+                    ant->prox = aux->prox;
+                    free(aux);
+                    return 1;
+                }
+            }
+
+            //Verifica último nó da lista
+            if (aux->chave == chave)
+            {
+                ant->prox = NULL;
+                free(aux);
+                return 1;
+            }
+        }
     }
     return 0;
 }
