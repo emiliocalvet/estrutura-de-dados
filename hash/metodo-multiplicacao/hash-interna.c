@@ -3,7 +3,7 @@
 
 #define P 100     //Endereços base.
 #define S 37      //Zona de colisão.
-#define M (P + S) //Tamanho da tabela.
+#define M (P + S) //Tamanho da tabela (USAR CHAVES DE 4 DÍGITOS).
 
 typedef struct no
 {
@@ -40,10 +40,10 @@ int main()
         printf(" ________________________________ \n");
         printf("|########## HASH-INTERNA ########|\n");
         printf("|                                |\n");
-        printf("|          [3] INSERIR           |\n");
-        printf("|          [4] BUSCAR            |\n");
-        printf("|          [5] REMOVER           |\n");
-        printf("|          [6] SAIR              |\n");
+        printf("|          [1] INSERIR           |\n");
+        printf("|          [2] BUSCAR            |\n");
+        printf("|          [3] REMOVER           |\n");
+        printf("|          [4] SAIR              |\n");
         printf("|________________________________|\n");
         printf("\n");
 
@@ -129,21 +129,19 @@ int main()
 int hash(int chave)
 {
     int posicao;
-    int aux[7];
+    int aux[8];
     chave = chave * chave;
 
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < 8; i++)
     {
-        aux[6 - i] = chave % 10;
+        aux[7 - i] = chave % 10;
         chave = chave / 10;
     }
 
     posicao = (aux[2] * 100) + (aux[3] * 10) + aux[4];
 
     if (posicao > M)
-    {
         posicao = posicao - (aux[2] * 100);
-    }
 
     return posicao;
 }
@@ -160,7 +158,7 @@ int inserir(Hash tabela, int chave, int info)
         //Verifica colisão.
         if (aux == NULL)
         {
-            //Insere elemento.
+            //Insere nó na posição h.
             aux = (No *)malloc(sizeof(No));
             aux->chave = chave;
             aux->info = info;
@@ -171,6 +169,7 @@ int inserir(Hash tabela, int chave, int info)
         }
         else
         {
+            //h recebe primeira posição disponível da zona de colisão.
             h = colisao(tabela);
             if (h == -1)
             {
@@ -179,9 +178,10 @@ int inserir(Hash tabela, int chave, int info)
             }
             else
             {
+                //Percorre até o fim da lista de colisão interna.
                 while (aux->prox != NULL)
                     aux = aux->prox;
-                //Insere elemento.
+                //Insere nó.
                 aux->prox = (No *)malloc(sizeof(No));
                 aux = aux->prox;
                 aux->chave = chave;
@@ -193,6 +193,7 @@ int inserir(Hash tabela, int chave, int info)
             }
         }
     }
+    return -1;
 }
 
 No *buscar(Hash tabela, int chave)
@@ -200,6 +201,7 @@ No *buscar(Hash tabela, int chave)
     int h = hash(chave);
     No *aux = tabela[h];
 
+    //Em caso de colisão, procura nó que corresponde a chave na lista encadeada.
     while (aux != NULL)
     {
         if (aux->chave == chave)
@@ -217,53 +219,60 @@ int remover(Hash tabela, int chave)
     {
         int h = hash(chave);
         aux = tabela[h];
+        No *ant;
 
-        if (aux != NULL) //Sem utilidade, REMOVER IF INUTIL.
+        //Verifica primeiro nó da lista.
+        if (aux->chave == chave)
         {
-            No *ant;
-
-            //Verifica primeiro nó da lista.
-            if (aux->chave == chave)
+            if (aux->prox == NULL)
             {
-                ant = aux;
-                aux = aux->prox;
                 tabela[aux->pos] = NULL;
-                free(ant);
+                free(aux);
                 return 1;
             }
             else
             {
-                //Verifica nós intermediários.
-                while (aux->prox != NULL)
-                {
-                    ant = aux;
-                    aux = aux->prox;
-                    if (aux->chave == chave)
-                    {
-                        ant->prox = aux->prox;
-                        tabela[aux->pos] = NULL;
-                        free(aux);
-                        return 1;
-                    }
-                }
-                //Verifica último nó da lista.
+                ant = aux;
+                aux = aux->prox;
+                tabela[aux->pos] = NULL;
+                aux->pos = ant->pos;
+                tabela[ant->pos] = aux;
+                free(ant);
+                return 1;
+            }
+        }
+        else
+        {
+            //Verifica nós intermediários.
+            while (aux->prox != NULL)
+            {
+                ant = aux;
+                aux = aux->prox;
                 if (aux->chave == chave)
                 {
+                    ant->prox = aux->prox;
                     tabela[aux->pos] = NULL;
                     free(aux);
                     return 1;
                 }
+            }
+
+            //Verifica último nó da lista
+            if (aux->chave == chave)
+            {
+                tabela[aux->pos] = NULL;
+                free(aux);
+                return 1;
             }
         }
     }
     return 0;
 }
 
-//Verifica posicao disponível na zona de colisão.
-int colisao(Hash tabela)
+int colisao(Hash tabela) //Verifica posicao disponível na zona de colisão e retorna.
 {
     for (int i = P; i < M; i++)
         if (tabela[i] == NULL)
             return i;
-    return -1;
+    return -1; //Caso não tenha mais espaço disponível.
 }

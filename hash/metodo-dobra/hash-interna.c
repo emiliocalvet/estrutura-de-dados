@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define P 100     //Endereços base.
 #define S 37      //Zona de colisão.
 #define M (P + S) //Tamanho da tabela.
+#define CHAVE_BIT 8             //Número de bits da chave (Escolher numeros pares). CHAVE MAX = 255 caso 8bits.
+#define BASE_BIT (CHAVE_BIT / 2)//Número de bits do endereço 
 
 typedef struct no
 {
@@ -14,10 +17,13 @@ typedef struct no
 } No;
 
 typedef No *Hash[M];
+int buffer_bin[CHAVE_BIT];
 
+int *dec_to_bin(int dec);
+int bin_to_dec(int *bin);
 int hash(int chave);
 int inserir(Hash tabela, int chave, int info);
-No *busca(Hash tabela, int chave);
+No *buscar(Hash tabela, int chave);
 int remover(Hash tabela, int chave);
 int colisao(Hash tabela);
 
@@ -74,7 +80,7 @@ int main()
         case 2:
             printf("\nDigite o numero da chave de acesso: ");
             scanf("%d", &chave);
-            aux = busca(tabela, chave);
+            aux = buscar(tabela, chave);
             if (aux != NULL)
             {
                 printf("\nNumero guardado: %d", aux->info);
@@ -126,14 +132,54 @@ int main()
     return 0;
 }
 
-int hash(int chave) //Método da divisão.
+int *dec_to_bin(int dec)
 {
-    return (chave % M);
+    for (int i = (CHAVE_BIT - 1); i >= 0; i--)
+    {
+        if (dec % 2 == 0)
+            buffer_bin[i] = 0;
+        else
+            buffer_bin[i] = 1;
+        dec = dec / 2;
+    }
+    return buffer_bin;
+}
+
+//Transforma de binário para decimal.
+int bin_to_dec(int *bin)
+{
+    int dec = 0;
+
+    for (int i = (BASE_BIT - 1); i >= 0; i--)
+    {
+        dec = dec + (bin[i] * pow(2, (BASE_BIT - i)));
+    }
+
+    return dec;
+}
+
+//Método da dobra.
+int hash(int chave)
+{
+    int *chave_bin = dec_to_bin(chave);
+    int pos_bin[BASE_BIT];
+
+    for (int i = 0; i < BASE_BIT; i++)
+    {
+        //Operação OUEX.
+        pos_bin[i] = chave_bin[i] ^ chave_bin[i + BASE_BIT];
+        //Operação OU
+        //pos_bin[i] = chave_bin[i] | chave_bin[i + (CHAVE_BIT / 2)];
+        //Operação E.
+        //pos_bin[i] = chave_bin[i] & chave_bin[i + (CHAVE_BIT / 2)];
+    }
+    int posicao = bin_to_dec(pos_bin);
+    return posicao;
 }
 
 int inserir(Hash tabela, int chave, int info)
 {
-    No *aux = busca(tabela, chave);
+    No *aux = buscar(tabela, chave);
     int h = hash(chave);
 
     //Verifica chave repetida.
@@ -143,7 +189,7 @@ int inserir(Hash tabela, int chave, int info)
         //Verifica colisão.
         if (aux == NULL)
         {
-            //Insere elemento.
+            //Insere nó na posição h.
             aux = (No *)malloc(sizeof(No));
             aux->chave = chave;
             aux->info = info;
@@ -154,6 +200,7 @@ int inserir(Hash tabela, int chave, int info)
         }
         else
         {
+            //h recebe primeira posição disponível da zona de colisão.
             h = colisao(tabela);
             if (h == -1)
             {
@@ -162,9 +209,10 @@ int inserir(Hash tabela, int chave, int info)
             }
             else
             {
+                //Percorre até o fim da lista de colisão interna.
                 while (aux->prox != NULL)
                     aux = aux->prox;
-                //Insere elemento.
+                //Insere nó.
                 aux->prox = (No *)malloc(sizeof(No));
                 aux = aux->prox;
                 aux->chave = chave;
@@ -176,13 +224,15 @@ int inserir(Hash tabela, int chave, int info)
             }
         }
     }
+    return -1;
 }
 
-No *busca(Hash tabela, int chave)
+No *buscar(Hash tabela, int chave)
 {
     int h = hash(chave);
     No *aux = tabela[h];
 
+    //Em caso de colisão, procura nó que corresponde a chave na lista encadeada.
     while (aux != NULL)
     {
         if (aux->chave == chave)
@@ -194,59 +244,66 @@ No *busca(Hash tabela, int chave)
 
 int remover(Hash tabela, int chave)
 {
-    No *aux = busca(tabela, chave);
+    No *aux = buscar(tabela, chave);
 
     if (aux != NULL) //Verifica se a chave está cadastrada.
     {
         int h = hash(chave);
         aux = tabela[h];
+        No *ant;
 
-        if (aux != NULL) //Sem utilidade, REMOVER IF INUTIL.
+        //Verifica primeiro nó da lista.
+        if (aux->chave == chave)
         {
-            No *ant;
-
-            //Verifica primeiro nó da lista.
-            if (aux->chave == chave)
+            if (aux->prox == NULL)
             {
-                ant = aux;
-                aux = aux->prox;
                 tabela[aux->pos] = NULL;
-                free(ant);
+                free(aux);
                 return 1;
             }
             else
             {
-                //Verifica nós intermediários.
-                while (aux->prox != NULL)
-                {
-                    ant = aux;
-                    aux = aux->prox;
-                    if (aux->chave == chave)
-                    {
-                        ant->prox = aux->prox;
-                        tabela[aux->pos] = NULL;
-                        free(aux);
-                        return 1;
-                    }
-                }
-                //Verifica último nó da lista.
+                ant = aux;
+                aux = aux->prox;
+                tabela[aux->pos] = NULL;
+                aux->pos = ant->pos;
+                tabela[ant->pos] = aux;
+                free(ant);
+                return 1;
+            }
+        }
+        else
+        {
+            //Verifica nós intermediários.
+            while (aux->prox != NULL)
+            {
+                ant = aux;
+                aux = aux->prox;
                 if (aux->chave == chave)
                 {
+                    ant->prox = aux->prox;
                     tabela[aux->pos] = NULL;
                     free(aux);
                     return 1;
                 }
+            }
+
+            //Verifica último nó da lista
+            if (aux->chave == chave)
+            {
+                tabela[aux->pos] = NULL;
+                free(aux);
+                return 1;
             }
         }
     }
     return 0;
 }
 
-//Verifica posicao disponível na zona de colisão.
-int colisao(Hash tabela)
+int colisao(Hash tabela) //Verifica posicao disponível na zona de colisão e retorna.
 {
     for (int i = P; i < M; i++)
         if (tabela[i] == NULL)
             return i;
-    return -1;
+    return -1; //Caso não tenha mais espaço disponível.
 }

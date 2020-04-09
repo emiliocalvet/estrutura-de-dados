@@ -34,14 +34,14 @@ int main()
     {
         system("clear");
 
-        printf(" ___________________________________________ \n");
-        printf("|############### HASH-EXTERNA ##############|\n");
-        printf("|                                           |\n");
-        printf("|                [1] INSERIR                |\n");
-        printf("|                [2] BUSCAR                 |\n");
-        printf("|                [3] REMOVER                |\n");
-        printf("|                [4] SAIR                   |\n");
-        printf("|___________________________________________|\n");
+        printf(" ________________________________ \n");
+        printf("|########## HASH-INTERNA ########|\n");
+        printf("|                                |\n");
+        printf("|          [3] INSERIR           |\n");
+        printf("|          [4] BUSCAR            |\n");
+        printf("|          [5] REMOVER           |\n");
+        printf("|          [6] SAIR              |\n");
+        printf("|________________________________|\n");
         printf("\n");
 
         printf("Digite a opcao desejada: ");

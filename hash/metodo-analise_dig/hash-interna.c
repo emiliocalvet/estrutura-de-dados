@@ -257,6 +257,7 @@ int inserir(Hash tabela, int chave, int info)
             }
         }
     }
+    return -1;
 }
 
 No *buscar(Hash tabela, int chave)
@@ -282,7 +283,6 @@ int remover(Hash tabela, int chave)
     {
         int h = hash(chave);
         aux = tabela[h];
-
         No *ant;
 
         //Verifica primeiro nó da lista.
