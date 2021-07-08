@@ -1,3 +1,5 @@
+//Author: Emilio Calvet
+
 #include <stdio.h>
 #include <stdlib.h>
 
